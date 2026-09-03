@@ -44,7 +44,11 @@ services:
       dockerfile: Dockerfile
     container_name: eventos_gateway
     depends_on:
-      - eventosapi
+      eventosapi:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Services__EventosApi: "http://eventosapi:8080"
     ports:
       - "5000:8080"
 
