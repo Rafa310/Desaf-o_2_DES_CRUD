@@ -1,18 +1,52 @@
-version: '3.8'
-
 services:
-  mysql-eventos:
-    image: mysql:8.0
-    container_name: eventos_db
-    command: --default-authentication-plugin=mysql_native_password
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: eventos_sqlserver
     environment:
-      MYSQL_ROOT_PASSWORD: 123456
-      MYSQL_DATABASE: bd_des104_d2
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrong!Passw0rd"
     ports:
-      - "3307:3306"
+      - "1433:1433"
     volumes:
-      - ./sql-script:/docker-entrypoint-initdb.d
-      - datos_mysql:/var/lib/mysql
+      - datos_sqlserver:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: eventos_redis
+    ports:
+      - "6379:6379"
+
+  eventosapi:
+    build:
+      context: ./EventosApi
+      dockerfile: Dockerfile
+    container_name: eventos_api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      AppSettings__ConnectionString: "Server=sqlserver,1433;Database=DesafioEventosDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;"
+      ConnectionStrings__Redis: "redis:6379"
+    ports:
+      - "5001:8080"
+
+  apigateway:
+    build:
+      context: ./ApiGateway
+      dockerfile: Dockerfile
+    container_name: eventos_gateway
+    depends_on:
+      - eventosapi
+    ports:
+      - "5000:8080"
 
 volumes:
-  datos_mysql:
+  datos_sqlserver:
