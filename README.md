@@ -3,6 +3,13 @@
 API CRUD con Dapper + cache de lectura en Redis, expuesta a traves de un API Gateway con Ocelot
 (rate limiting + cache), todo contenedorizado con Docker y SQL Server.
 
+# Integrantes
+```
+Angel Eduardo Moreno Escobar  -   ME220001
+Rafael Adolfo Ruiz Garcia     -   RG210380
+Ricardo Ivan Escobar Umaña    -   EU220488
+```
+
 ## Estructura del proyecto
 
 ```
